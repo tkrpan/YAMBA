@@ -1,0 +1,18 @@
+public void addPreferencesFromIntent (Intent intent) 
+Added in API level 1
+
+This method was deprecated in API level 11.
+This function is not relevant for a modern fragment-based PreferenceActivity. 
+
+Adds preferences from activities that match the given Intent.
+
+Parameters
+intent  The Intent to query activities. 
+
+The method addPreferencesFromResource(int) from the type 
+PreferenceActivity is deprecated
+
+
+http://developer.android.com/reference/android/preference/PreferenceActivity.html
+
+https://github.com/commonsguy/cw-omnibus/tree/master/Prefs/FragmentsBC
