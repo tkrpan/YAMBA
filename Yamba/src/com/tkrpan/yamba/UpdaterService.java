@@ -2,6 +2,8 @@ package com.tkrpan.yamba;
 
 import java.util.List;
 
+import com.tkrpan.yamba.StatusData.DbHelper;
+
 import winterwell.jtwitter.Twitter;
 import winterwell.jtwitter.TwitterException;
 
@@ -37,12 +39,12 @@ public class UpdaterService extends Service {
 	public void onCreate() {
 		// TODO Auto-generated method stub
 		super.onCreate();
-		this.yamba = (YambaApplication)getApplication(); //referenca na objekt YambaAplication korištenjem metode getApplication()
-		Log.d(TAG, "onCreate");
-		this.updater = new Updater(); // posebna nit koja komunicira preko mreže i preuzima statuse.
-		//potrebno ju je napraviti samo jedanput.
-		
-		dbHelper = new DbHelper(this); // Service je podklasa konteksta
+//		this.yamba = (YambaApplication)getApplication(); //referenca na objekt YambaAplication korištenjem metode getApplication()
+//		Log.d(TAG, "onCreate");
+//		this.updater = new Updater(); // posebna nit koja komunicira preko mreže i preuzima statuse.
+//		//potrebno ju je napraviti samo jedanput.
+//		
+//		dbHelper = new DbHelper(this); // Service je podklasa konteksta
 	}
 	
 	@Override
@@ -81,8 +83,6 @@ public class UpdaterService extends Service {
 	//nit koja preuzima statuse sa mrežne usluge
 	private class Updater extends Thread { //klasa updater je nit pa ju proširujemo
 		
-		List <Twitter.Status> timeline; //timline je lista
-		
 		public Updater(){ //imenovanje niti
 			super("UpdaterService-Updater");
 		}
@@ -95,43 +95,40 @@ public class UpdaterService extends Service {
 				
 				Log.d(TAG, "Updater run");	
 				
-				try {
-					//preuzima status iz oblaka
 					try {
-						timeline = yamba.getTwitter().getFriendsTimeline();
-						//Poziva se getTwiter() u YambaAplication
-						//zatim se uzima objekt Twitter i zatim na njemu Timline
-						//ova metoda može trajati i smještena je u posebnu nit
-					} catch (TwitterException e1) {
-						Log.d(TAG, "Failed to connect to twitter service", e1);
-						e1.printStackTrace();
-					} 
-					
-					db = dbHelper.getWritableDatabase(); // na ovoj liniji otici ce u dbHelper i izraditi datoteku baze podataka
-					
-					ContentValues values = new ContentValues(); //jednostavna strukutra ime - vrijednost koja preslikava imena tablica baze podataka njihovim odgovarajuæim vrijednostima
-					//prolazi kroz sustav i ispisuje ih
-					for(Twitter.Status status : timeline){
-						values.clear();
-						values.put(DbHelper.C_ID, status.id);
-						values.put(dbHelper.C_CREATED_AT, status.createdAt.getTime());
-						values.put(dbHelper.C_SOURCE, status.source);
-						values.put(dbHelper.C_TEXT, status.text);
-						values.put(dbHelper.C_USER, status.user.name);
+						YambaApplication yamba = (YambaApplication)updaterService.getApplication();
 						
-						try {
-							//umeæemo vriejdnost sadržaja u bazu preko poziva insert() na objektu SQLiteDatabase
-							db.insertOrThrow(DbHelper.TABLE, null, values);
-							
-							Log.d(TAG, String.format("%s: %s", status.user.name, status.text));
-							//ispisujemo statuse u LogCat
-						} catch (SQLException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+						int newUpdates = yamba.fetchStatusUpdate(); 
+						
+						if (newUpdates > 0){	
 						}
-					}
-					
-					db.close(); // da ne bi drugi Activity pokuašvao pisati ili èitati
+						
+//						timeline = yamba.getTwitter().getFriendsTimeline();
+//						//Poziva se getTwiter() u YambaAplication
+//						//zatim se uzima objekt Twitter i zatim na njemu Timline
+//						//ova metoda može trajati i smještena je u posebnu nit
+//					} catch (TwitterException e1) {
+//						Log.d(TAG, "Failed to connect to twitter service", e1);
+//						e1.printStackTrace();
+//					} 
+//					
+//					db = DbHelper.getWritableDatabase(); // na ovoj liniji otici ce u dbHelper i izraditi datoteku baze podataka
+//					
+//					ContentValues values = new ContentValues(); //jednostavna strukutra ime - vrijednost koja preslikava imena tablica baze podataka njihovim odgovarajuæim vrijednostima
+//					//prolazi kroz sustav i ispisuje ih
+//						
+//						try {
+//							//umeæemo vriejdnost sadržaja u bazu preko poziva insert() na objektu SQLiteDatabase
+//							db.insertOrThrow(DbHelper.TABLE, null, values); // poušava spremititi podatke u bazu ali ne uspjeva
+//							
+//							Log.d(TAG, String.format("%s: %s", status.user.name, status.text));
+//							//ispisujemo statuse u LogCat
+//						} catch (SQLException e) {
+//							// ignorira iznimku
+//						}
+//					}
+//					
+//					db.close(); // da ne bi drugi Activity pokuašvao pisati ili èitati
 					
 					
 					Thread.sleep(DELAY); //prekida izvršavanje niti Updater na odreðeni broj milisekundi

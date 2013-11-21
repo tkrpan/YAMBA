@@ -1,7 +1,14 @@
 package com.tkrpan.yamba;
 
+import java.util.List;
+
+import com.tkrpan.yamba.StatusData.DbHelper;
+
 import winterwell.jtwitter.Twitter;
+import winterwell.jtwitter.Twitter.Status;
+import winterwell.jtwitter.TwitterException;
 import android.app.Application;
+import android.content.ContentValues;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.preference.PreferenceManager;
@@ -13,6 +20,8 @@ public class YambaApplication extends Application implements OnSharedPreferenceC
 	SharedPreferences prefs;
 	private boolean serviceRunning; // flag koji æe govoriti izvršava li se Servis ili ne
 	//oznaka je privatna u ovoj klasi pa ju se izvana ne može mijenjati
+	
+	private StatusData statusData;
 	
 	@Override
 	public void onCreate() { //poziva se kada je aplikacija prvi put izraðena
@@ -60,5 +69,48 @@ public class YambaApplication extends Application implements OnSharedPreferenceC
 	
 	public void setServiceRunning(boolean serviceRunning){ //ova metoda æe postavljati status oznake
 		this.serviceRunning = serviceRunning;
+	}
+	
+	public StatusData getStatusData(){ //objekt je dostupan ostatku aplikacije samo kroz ovu metodu
+		if(statusData == null){
+			statusData = new StatusData(this);
+		}
+		return statusData;
+	}
+	
+	//SPaja se s mrežom i smješta najnovije statuse u bazu
+	//Vraæa broj novih statusa
+	
+	public synchronized int fetchStatusUpdate (){
+		Twitter twitter = this.getTwitter();
+		if(twitter==null){
+			return 0;
+		}
+		try {
+			List<Status> statusUpdate = twitter.getFriendsTimeline();
+			long latestStatusCreatedAtTime = this.getStatusData().getLatestStatusCreatedAtTime();
+			int count = 0;
+			
+			ContentValues values = new ContentValues();
+			
+			for(Twitter.Status status : statusUpdate){
+				
+				values.put(StatusData.C_ID, status.getId());
+				long createdAt =status.getCreatedAt().getTime();
+				values.put(StatusData.C_CREATED_AT, createdAt);
+				//values.put(dbHelper.C_SOURCE, status.source);
+				values.put(StatusData.C_TEXT, status.getText());
+				values.put(StatusData.C_USER, status.user.getName());
+				
+				this.getStatusData().insertOrIgnore(values);
+				
+				if(latestStatusCreatedAtTime < createdAt){
+					count ++;
+				}
+			}
+			return count;
+		} catch (RuntimeException e) {
+			return 0;
+		}
 	}
 }
