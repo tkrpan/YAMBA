@@ -17,33 +17,30 @@ import android.util.Log;
 
 public class UpdaterService extends Service {
 	
+	public static final String NEW_STATUS_INTENT = "com.marakana.yamba.NEW_STATUS";
+	public static final String NEW_STATUS_EXTRA_COUNT = "NEW_STATUS_EXTRA_COUNT";
 	private static final String TAG = "UpdaterService";
 	static final int DELAY = 60000; //minuta
 	private boolean runFlag = false;
 	private Updater updater;
-	private YambaApplication yamba;
 	
-	DbHelper dbHelper;
-	SQLiteDatabase db;
+	//private YambaApplication yamba;
+	//DbHelper dbHelper;
+	//SQLiteDatabase db;
 
 	@Override
-	//koristi se u vezanim uslugama da vrati stvarnu implementaciju neèega što se zove  poveznik
-	//engl. binder. Za sada vracamo samo nulu
+	//koristi se u vezanim uslugama da vrati stvarnu implementaciju neèega što se zove  poveznik engl. binder. Za sada vracamo samo nulu
 	public IBinder onBind(Intent intent) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	//Dobro mjesto za oavljanje posla koji se treba obaviti samo jednom za vrijeme trajanja Servisa
 	public void onCreate() {
-		// TODO Auto-generated method stub
 		super.onCreate();
+		this.updater = new Updater(); // posebna nit koja komunicira preko mreže i preuzima statuse. Potrebno ju je napraviti samo jedanput.
+		
 //		this.yamba = (YambaApplication)getApplication(); //referenca na objekt YambaAplication korištenjem metode getApplication()
-//		Log.d(TAG, "onCreate");
-//		this.updater = new Updater(); // posebna nit koja komunicira preko mreže i preuzima statuse.
-//		//potrebno ju je napraviti samo jedanput.
-//		
 //		dbHelper = new DbHelper(this); // Service je podklasa konteksta
 	}
 	
@@ -51,9 +48,7 @@ public class UpdaterService extends Service {
 	//poziva se svaki puta kada Servis primi namjeru startService()
 	//može primiti više zahtjeva da bude pokrenuta i svaki že izazvati onStartCommand()
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		// TODO Auto-generated method stub
-		if(!runFlag==true){
-			
+		if(!runFlag){
 			this.runFlag = true; // postavlja zastavicu da je pokrenuta nit Updater
 			this.updater.start();
 			((YambaApplication)super.getApplication()).setServiceRunning(true); //ne kontam zašto nije stavio runFlag
@@ -69,13 +64,12 @@ public class UpdaterService extends Service {
 	//poziva se neposredno prije unuštavanja Servisa, kroz zahtjev stopService()
 	//Dobro mjesto za pospremanje stvari koje su inicijalizirane u onCreate()
 	public void onDestroy() {
-		// TODO Auto-generated method stub
 		super.onDestroy();
 		
 		this.runFlag = false; //nit se više ne izvršava
 		this.updater.interrupt(); //interupt() prekida nit
 		this.updater = null; //procesu prikupljanja otpada olakšavamo posao
-		this.yamba.setServiceRunning(false);
+		((YambaApplication) super.getApplication()).setServiceRunning(false);
 		
 		Log.d(TAG, "onDestroy");
 	}
@@ -97,11 +91,7 @@ public class UpdaterService extends Service {
 				
 					try {
 						YambaApplication yamba = (YambaApplication)updaterService.getApplication();
-						
-						int newUpdates = yamba.fetchStatusUpdate(); 
-						
-						if (newUpdates > 0){	
-						}
+						int newUpdates = yamba.fetchStatusUpdate();
 						
 //						timeline = yamba.getTwitter().getFriendsTimeline();
 //						//Poziva se getTwiter() u YambaAplication

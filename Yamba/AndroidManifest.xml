@@ -7,28 +7,36 @@
     <uses-sdk
         android:minSdkVersion="4"
         android:targetSdkVersion="8" />
-    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
+        android:name="com.tkrpan.yamba.YambaApplication"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" 
-        android:name=".YambaApplication"> 
-        <!--govorimo aplikaciji da koristi YambaApplication umjesto Application
-        u elementu application govorimo da sustavu da instancira naš YambaApplication objekt-->
-        
+        android:theme="@style/AppTheme" >
+
+        <!--
+        govorimo aplikaciji da koristi YambaApplication umjesto Application
+        u elementu application govorimo sustavu da instancira naš YambaApplication objekt
+        -->
+
         <activity
             android:name="com.tkrpan.yamba.StatusActivity"
             android:label="@string/app_name" >
-            
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
-        <activity android:name=".PrefsActivity"></activity>
+        <activity android:name="com.tkrpan.yamba.PrefsActivity" >
+        </activity>
+        <activity
+            android:name="com.tkrpan.yamba.TimelineActivity"
+            android:label="@string/title_activity_timeline" >
+        </activity>
+        <service android:name=".UpdaterService" />
     </application>
 
 </manifest>

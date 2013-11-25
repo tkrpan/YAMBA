@@ -30,6 +30,7 @@ public class YambaApplication extends Application implements OnSharedPreferenceC
 		this.prefs = PreferenceManager.getDefaultSharedPreferences(this);//postavlja postavke
 		//svaka aplikacija ima vlastite postavke koje su dostupne svim komponentama tog konteksta aplikacije.
 		this.prefs.registerOnSharedPreferenceChangeListener(this);
+		this.statusData = new StatusData(this);
 	}
 
 	@Override
@@ -78,6 +79,10 @@ public class YambaApplication extends Application implements OnSharedPreferenceC
 		return statusData;
 	}
 	
+	public SharedPreferences getPrefs() {
+		    return prefs;
+		  }
+	
 	//SPaja se s mrežom i smješta najnovije statuse u bazu
 	//Vraæa broj novih statusa
 	
@@ -100,7 +105,7 @@ public class YambaApplication extends Application implements OnSharedPreferenceC
 				values.put(StatusData.C_CREATED_AT, createdAt);
 				//values.put(dbHelper.C_SOURCE, status.source);
 				values.put(StatusData.C_TEXT, status.getText());
-				values.put(StatusData.C_USER, status.user.getName());
+				values.put(StatusData.C_USER, status.getUser().getName());
 				
 				this.getStatusData().insertOrIgnore(values);
 				
